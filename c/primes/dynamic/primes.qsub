@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#PBS -l nodes=5:ppn=8
+#PBS -N primes_dynamic
+
+. /mounts/al-salam/software/Modules/3.2.7/init/al-salam.sh
+module load modules
+module load openmpi
+
+cd $PBS_O_WORKDIR
+
+./benchmark.sh $PBS_NODEFILE 32
