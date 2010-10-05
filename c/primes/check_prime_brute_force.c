@@ -3,7 +3,6 @@
 int check_prime_brute_force(unsigned long number) {
 	
 	unsigned long upper_bound = (number / 2), remainder, divisor = 3;
-	double u_b_d, n_d; 
 	
 	remainder = number % 2; 
 	if (remainder == 0)

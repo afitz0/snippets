@@ -11,42 +11,8 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-
-const bool debug = true;
-
-const bool  SERVER_SLEEPS          = false;
-const bool  SERVER_DOES_WORK       = false;
-const int   SERVER                 = 0;
-const int   INITIAL_WORK_UNIT_SIZE = 10000;
-const long  RANGE                  = 100000000;
-const float REDUCTION_THRESHOLD    = 0.1; // How much slower than average before reducing WU
-const float REDUCTION_AMOUNT       = 0.05; // How much to reduce WU
-
-enum {
- REQUEST_TAG,
- WORK_UNIT_TAG,
- RESULTS_TAG,
- STOP_TAG
-};
-
-typedef struct {
-  double last_time;
-  int    wu_size;
-} completion_data;
-
-typedef struct {
-  double runtime;
-  long   number_of_primes;
-} results_data;
-
-MPI_Datatype create_results_type (results_data * r);
-int      check_prime_brute_force (unsigned long number);
-void                  mpi_errors (MPI_Comm *comm, int *err, ...);
-results_data         find_primes (long lower, long upper);
-void                 print_stats (completion_data* data, int procs, long primes, double runtime);
-void               serve_request (int source, long * low, int wu_size);
-int              receive_results (MPI_Datatype type, int source, completion_data * data,
-                                  double * avg_time, double thresh, double amt);
+#include "../check_prime_brute_force.h"
+#include "primes.h"
 
 int main (int argc, char** argv) {
   MPI_Status     status;
@@ -78,7 +44,7 @@ int main (int argc, char** argv) {
     long   total_number_of_primes = 0;
     int    work_outstanding       = 0;
 
-    completion_data* completion_times;
+    work_unit* completion_times;
     double start_time, end_time;
     int request_flag, result_flag;
     MPI_Status status, request_status, result_status;
@@ -94,18 +60,19 @@ int main (int argc, char** argv) {
         break;
     }
 
-    completion_times = (completion_data*)malloc(sizeof(completion_data)*size);  
+    // Initialize completion time data
+    completion_times = (work_unit*)malloc(sizeof(work_unit)*size);  
     if (completion_times == NULL) {
       fprintf(stderr, "Malloc of completion_times failed");
       MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    // Initialize completion time data
     for (i = 0; i < size; i++) {
       completion_times[i].wu_size   = wu;
       completion_times[i].last_time = 0;
     }
 
+		// Total run timer
     start_time = MPI_Wtime();
 
     while (!done) {
@@ -294,7 +261,7 @@ results_data find_primes(long lower, long upper) {
   return results;
 }
 
-void print_stats(completion_data* data, int procs, long primes, double runtime) {
+void print_stats(work_unit* data, int procs, long primes, double runtime) {
   int avg_wu, max_wu, min_wu, i;
   double avg_time;
 
@@ -324,38 +291,7 @@ void print_stats(completion_data* data, int procs, long primes, double runtime) 
     RANGE, primes, avg_time, min_wu, max_wu, avg_wu, runtime);
 }
 
-int check_prime_brute_force(unsigned long number) {
-  unsigned long upper_bound, remainder, divisor = 3;
-
-  // 2 is the only number not caught below
-  if (number == 2)
-    return(1);
-
-  remainder = number % 2; 
-  if (remainder == 0)
-    return(0);
-
-  /* Say number is not prime, then it factors as n = ab.  Consequently 
-     one of {a, b} has to be <= sqrt(n), and the other has to be >= sqrt(n).  
-     That is if both a, b are < sqrt(n) then ab < n.  Thanks Tim McLarnan. */
-  upper_bound = sqrt(number); 
-
-  while (divisor <= upper_bound) {
-    remainder = number % divisor; 
-
-    if (remainder == 0)
-      return(0); 
-
-    /* Since we filter all the even numbers we don't need to divide by
-       even divisors.  If we initialize divisor to 3 we can increment by 2
-       each time and cut our work in half.  Thanks Tim McLarnan.  */
-    divisor += 2;           
-  }
-
-  return 1;
-}
-
-int receive_results(MPI_Datatype type, int source, completion_data * data,
+int receive_results(MPI_Datatype type, int source, work_unit * data,
                    double * avg_time, double thresh, double amt) {
   results_data  results;
   MPI_Status    status;
