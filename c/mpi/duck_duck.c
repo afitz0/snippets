@@ -4,9 +4,11 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define SERVER 			0
-#define CLOCKWISE 	1
-#define COUNTERWISE 2
+enum {
+	SERVER = 0,
+	CLOCKWISE,
+	COUNTERWISE
+};
 
 int main(int argc, char ** argv) {
 	int rank, size;
@@ -23,8 +25,7 @@ int main(int argc, char ** argv) {
 
 	srandom(time(NULL));
 
-	// Choose the rank of the first target
-	// and send it next
+	// Choose the rank of the first target and send it next
 	if (rank == SERVER) {
 		target = random() % size;
 		printf("Rank %d: I'm going to goose rank %d.\n", rank, target);
