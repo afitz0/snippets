@@ -1,3 +1,10 @@
+/*
+	Code to (in essence) test the internal buffer limits on MPI.
+	Ranks 1..n send as fast as possible, while rank 0 receives them all
+	as fast as possible.
+
+	Expected behavior is that rank 0
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
