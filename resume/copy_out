@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# If internet available, copy HTML out to useful locations.
+ping -c 1 -t 1 8.8.8.8 &> /dev/null
+if [ $? == 0 ]; then
+	scp resume.html cs.earlham.edu:~/www/ &
+	scp resume.html login.shodor.org:~/public_html/ &
+	scp -o "LogLevel quiet" resume.html cluster.earlham.edu:~/public_html/ &
+  wait
+	wget -nv -O resume.txt http://cgi.w3.org/cgi-bin/html2txt?url=http%3A%2F%2Fcs.earlham.edu%2F%7Efitz%2Fresume.html
+fi
