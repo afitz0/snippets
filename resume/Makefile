@@ -4,6 +4,8 @@ default: clean resume.tex
 	latex2html -nonavigation -noauto_navigation -nosubdir -nofootnode -noinfo -noaddress resume
 	sed -i '' -e 's/<HR>//' resume.html
 	latex2rtf resume.tex
+
+install:
 	./copy_out
 
 clean:
