@@ -17,7 +17,7 @@ int main() {
   v = random() % 1000;
   tree->value = v;
 
-  for (i = 0; i < 1000000; i++) {
+  for (i = 0; i < 10; i++) {
     v = random() % 1000;
 
     bst_insert(v, tree);

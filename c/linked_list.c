@@ -126,7 +126,7 @@ void removeNext(struct node* n) {
 }
 
 // O(n^2) imnplementation of removing duplicates
-struct node* removeDups(struct node* list) {
+struct node* removeDups1(struct node* list) {
   if (list == NULL || list->next == NULL) return list;
 
   struct node* curr = list;
@@ -146,6 +146,8 @@ struct node* removeDups(struct node* list) {
   }
   return list;
 }
+
+struct node* removeDups2
 
 int main() {
   int i;
@@ -168,7 +170,7 @@ int main() {
   }
 
   puts("Remove duplicates of list.");
-  removeDups(list);
+  removeDups1(list);
   puts("New list:");
   print_list(list);
 }
