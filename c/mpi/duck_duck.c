@@ -1,3 +1,9 @@
+/*
+
+Simple MPI instructional program based on the activity outlined here:
+  http://wiki.sc-education.org/index.php/MPI_Duck,_Duck..._Goose!
+
+*/
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>

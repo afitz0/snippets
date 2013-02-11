@@ -34,6 +34,7 @@ int main (int argc, char** argv) {
   MPI_Comm_create_errhandler(mpi_errors, &primes_errors);
   MPI_Comm_set_errhandler(MPI_COMM_WORLD, primes_errors);
 
+	// Server (master) code
   if (rank == SERVER) {
     int    wu                     = INITIAL_WORK_UNIT_SIZE;
     float  reduce_thresh          = REDUCTION_THRESHOLD;
@@ -72,7 +73,7 @@ int main (int argc, char** argv) {
       completion_times[i].last_time = 0;
     }
 
-		// Total run timer
+    // Total run timer
     start_time = MPI_Wtime();
 
     while (!done) {
@@ -87,16 +88,17 @@ int main (int argc, char** argv) {
           completion_times[request_status.MPI_SOURCE].wu_size);
 
         work_outstanding++;
+      }
 
-      // retrieve results from worker
-      } else if (result_flag) {
+			// retrieve results from worker
+			if (result_flag) {
         int worker = result_status.MPI_SOURCE;
 
         total_number_of_primes +=
           receive_results(ResultsType, worker, completion_times, &avg_time, reduce_thresh, reduce_amt);
         work_outstanding--;
 
-        if (debug) {
+        if (DEBUG) {
           printf("\tRank %d's last runtime: %lf\n",   worker, completion_times[worker].last_time);
           printf("\tThat rank's wu: %d\n",            completion_times[worker].wu_size);
           printf("\tAverage runtime: %lf\n",          avg_time);
@@ -104,16 +106,14 @@ int main (int argc, char** argv) {
         }
 
       // No requests or results to process
-      } else {
-        if (SERVER_DOES_WORK) {
-          long low = next_low;
-          long high = low + floor(wu/size);
-          next_low = high+1;
+      if (SERVER_DOES_WORK) {
+        long low = next_low;
+        long high = low + floor(wu/size);
+        next_low = high+1;
 
-          total_number_of_primes += find_primes(low, high).number_of_primes;
-        } else if (SERVER_SLEEPS) {
-          sleep(avg_time);
-        }
+        total_number_of_primes += find_primes(low, high).number_of_primes;
+      } else if (SERVER_SLEEPS) {
+        sleep(avg_time);
       }
 
       // check if we're done
@@ -129,7 +129,7 @@ int main (int argc, char** argv) {
           MPI_Recv(&results, 1, ResultsType, MPI_ANY_SOURCE, RESULTS_TAG, MPI_COMM_WORLD, &status);
           total_number_of_primes += results.number_of_primes;
 
-          if (debug)
+          if (DEBUG)
             printf("Got %ld more results from rank %d\n", results.number_of_primes, status.MPI_SOURCE);
 
           work_outstanding--;
@@ -157,12 +157,12 @@ int main (int argc, char** argv) {
       switch (status.MPI_TAG) {
         // Got work unit
         case WORK_UNIT_TAG:
-          if (debug)
+          if (DEBUG)
             printf("Rank %d received range: %ld - %ld\n", rank, range[0], range[1]);
 
           results = find_primes(range[0], range[1]);
 
-          if (debug) {
+          if (DEBUG) {
             printf("Rank %d found %ld primes between %ld and %ld\n",
               rank, results.number_of_primes, range[0], range[1]);
           }
@@ -172,7 +172,7 @@ int main (int argc, char** argv) {
 
         // Got stop message, no more work to do
         case STOP_TAG:
-          if (debug)
+          if (DEBUG)
             printf("Rank %d received done message\n", rank);
           done = true;
           break;
@@ -180,8 +180,8 @@ int main (int argc, char** argv) {
       // Got unknown message
         default:
           fprintf(stderr,
-									"Worker %d received an unknown message from the server.\n",
-									rank);
+                  "Worker %d received an unknown message from the server.\n",
+                  rank);
       }
     }
   }
@@ -217,7 +217,7 @@ void serve_request(int source, long * low, int wu_size) {
   MPI_Status status;
   long range[2];
 
-  if (debug)
+  if (DEBUG)
     printf("Probe shows request from %d, receiving...\n", source);
 
   MPI_Recv(&work_request, 1, MPI_INT, source, REQUEST_TAG, MPI_COMM_WORLD, &status);
@@ -229,7 +229,7 @@ void serve_request(int source, long * low, int wu_size) {
     range[1] = RANGE;
   *low = range[1] + 1;
 
-  if (debug) {
+  if (DEBUG) {
     printf("Sending range %ld - %ld to rank %d\n", range[0], range[1], source);
     fflush(stdout);
   }
@@ -323,5 +323,5 @@ void mpi_errors(MPI_Comm *comm, int *err, ...) {
 
   fprintf(stderr, "%s\n", err_str);
 
-  exit(EXIT_FAILURE);
+  MPI_Abort(MPI_COMM_WORLD, *err)
 }

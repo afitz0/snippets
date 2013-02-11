@@ -25,5 +25,5 @@ int main(int argc, char ** argv) {
 	}
 
 	printf("Primes between 1 and %ld: %d\n", UPPER, primes);
-	// E.g., Primes between 1 and 10000000: 665025
+	// E.g., Primes between 1 and 10000000: 664579
 }

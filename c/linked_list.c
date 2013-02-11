@@ -38,14 +38,18 @@ struct node* insert_item(struct node* l, int value) {
   return new;
 } 
 
-// Print every item in list l, including the position at which it appears
+// Print every item in list l
 void print_list(struct node* l) {
-  struct node* n;
+  struct node* n = l;
   int i;
 
-  for (i = 0, n = l; n != NULL; i++, n = n->next) {
-    printf("Item %d => %d\n", i, n->value);
+  printf("[");
+  for (i = 0; n != NULL; i++, n = n->next) {
+    printf("'%d'", n->value);
+    if (n->next != NULL) printf(",");
+    printf(" ");
   }
+  printf("]\n");
 }
 
 // Remove item with value from list l.
@@ -78,32 +82,93 @@ struct node* find_item(struct node* l, int value) {
   return n;
 }
 
+// reverse the order of the list such that 1 -> 2 -> 3 becomes 3 -> 2 -> 1
+struct node* reverse_list(struct node* l) {
+  struct node* new_head = l;
+
+  if (new_head == NULL) {
+    return new_head;
+  }
+
+  struct node* next = new_head->next;
+  new_head->next = NULL;
+
+  while (next != NULL) {
+    struct node* tmp = next->next;
+    next->next = new_head;
+
+    new_head = next;
+    next = tmp;
+  }
+
+  return new_head;
+}
+
+// swap pairs of the list such that 1 -> 2 -> 3 -> 4 -> 5 becomes 2 -> 1 -> 4 -> 3 -> 5
+struct node* swap_pairs(struct node* l) {
+  struct node* new_head = l;
+
+  if (new_head == NULL) {
+    return new_head;
+  }
+
+  // TODO implement me.
+}
+
+// Given a node, change its next to next->next
+void removeNext(struct node* n) {
+  if (n == NULL) return;
+  if (n->next != NULL) {
+    struct node* newNext = n->next->next;
+    n->next = newNext;
+  }
+  return;
+}
+
+// O(n^2) imnplementation of removing duplicates
+struct node* removeDups(struct node* list) {
+  if (list == NULL || list->next == NULL) return list;
+
+  struct node* curr = list;
+  while (curr != NULL) {
+    struct node* prev = curr;
+    struct node* lookAhead = curr->next;
+    while (lookAhead != NULL) {
+      if (lookAhead->value == curr->value) {
+        removeNext(prev);
+        lookAhead = prev->next;
+      } else {
+        lookAhead = lookAhead->next;
+        prev = prev->next;
+      }
+    }
+    curr = curr->next;
+  }
+  return list;
+}
+
 int main() {
   int i;
 
+  // Generally these are required to test anything.
+  puts("Add single node.");
   struct node* list = new_node(0);
-  printf("list's value: %d\n", list->value);
+  printf("\tnode's value: %d\n", list->value);
 
+  puts("Add lots of nodes.");
   for (i = 1; i < 100; i++) {
     insert_item(list, i);
   }
   print_list(list);
+  // ---- end initialization of list ----
 
-  puts("---------------------------------------------------------");
-
-  {
-    struct node* n = find_item(list, 50);
-    if (n->value != 50) {
-      printf("GOT WRONG ITEM; expected 50, got %d\n", n->value);
-    } else {
-      puts("Correctly retrieved item w/ value == 50");
-    }
+  puts("Adding some dupes");
+  for (i = 0; i < 10; i++) {
+    insert_item(list, i);
   }
 
-  puts("---------------------------------------------------------");
-
-  for (i = 25; i <= 75; i++) {
-    remove_item(list, i);
-  }
+  puts("Remove duplicates of list.");
+  removeDups(list);
+  puts("New list:");
   print_list(list);
 }
